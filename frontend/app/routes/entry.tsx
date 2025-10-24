@@ -5,6 +5,7 @@ import Editor from "~/components/Editor";
 import Navbar from "~/components/Navbar";
 import { api } from "~/utils/api";
 import { useAuth } from "~/utils/auth";
+import { getSessionId } from "~/utils/session";
 
 export default function Entry() {
   const { user, loading: authLoading } = useAuth();
@@ -12,6 +13,8 @@ export default function Entry() {
   const [content, setContent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<any>(null);
+  const [userState, setUserState] = useState<'no_entries' | 'has_entries'>('no_entries');
   const today = new Date();
   const todayString = format(today, "yyyy-MM-dd");
   const displayDate = format(today, "EEEE, MMMM d, yyyy");
@@ -22,14 +25,18 @@ export default function Entry() {
     }
   }, [user, authLoading, navigate]);
 
+  // Load entry and user state
   useEffect(() => {
     if (user) {
-      api
-        .getEntry(todayString)
-        .then((entry) => {
+      Promise.all([
+        api.getEntry(todayString),
+        api.getUserState()
+      ])
+        .then(([entry, state]) => {
           if (entry) {
             setContent(entry.content);
           }
+          setUserState(state.userState as 'no_entries' | 'has_entries');
         })
         .catch((err) => {
           console.error("Error loading entry:", err);
@@ -38,12 +45,48 @@ export default function Entry() {
     }
   }, [user, todayString]);
 
+  // Fetch random message and track view
+  useEffect(() => {
+    if (user && userState) {
+      api.getRandomMessage('entry')
+        .then((msg) => {
+          setMessage(msg);
+
+          // Track message view
+          if (msg.id) {
+            api.trackMessageInteraction({
+              messageId: msg.id,
+              sessionId: getSessionId(),
+              userId: user.id,
+              context: 'entry',
+              userState: userState,
+            }).catch((err) => console.error('Error tracking message view:', err));
+          }
+        })
+        .catch((err) => console.error('Error fetching message:', err));
+    }
+  }, [user, userState]);
+
   const handleSave = async () => {
     if (!content) return;
 
     setSaving(true);
     try {
       await api.saveEntry(todayString, content);
+
+      // Track outcome
+      if (message?.id && user) {
+        const outcome = userState === 'no_entries' ? 'wrote_first_entry' : 'wrote_entry';
+        await api.trackMessageInteraction({
+          messageId: message.id,
+          sessionId: getSessionId(),
+          userId: user.id,
+          context: 'entry',
+          userState: userState,
+          outcome: outcome,
+        }).catch((err) => console.error('Error tracking outcome:', err));
+      }
+
       navigate("/");
     } catch (err) {
       console.error("Error saving entry:", err);
@@ -65,33 +108,22 @@ export default function Entry() {
       <div className="editor-container">
         <h1 className="date-title">{displayDate}</h1>
 
-        <div
-          style={{
-            background: "linear-gradient(135deg, #667eea15 0%, #764ba215 100%)",
-            border: "1px solid #667eea40",
-            borderRadius: "8px",
-            padding: "20px 24px",
-            marginBottom: "24px",
-            lineHeight: "1.6",
-            color: "#555",
-          }}
-        >
-          <p style={{ margin: 0, marginBottom: "12px" }}>
-            <strong style={{ color: "#667eea" }}>
-              Capture both sides of the camera.
-            </strong>{" "}
-            Write what happened today and how you felt about it. Your thoughts,
-            your fears, your desires. Write about the objective events and also
-            who you were and how you lived them in that moment.
-          </p>
-          <p style={{ margin: 0 }}>
-            I'll show you this same date from every year you've written. Watch
-            yourself evolve. See what truly mattered. Get the perspective that
-            keeps those dark nights of the soul at bay. Remember who you are and
-            where you're going. Learn who do you want to be and what you
-            accomplished.
-          </p>
-        </div>
+        {message && (
+          <div
+            style={{
+              background: "linear-gradient(135deg, #667eea15 0%, #764ba215 100%)",
+              border: "1px solid #667eea40",
+              borderRadius: "8px",
+              padding: "20px 24px",
+              marginBottom: "24px",
+              lineHeight: "1.6",
+              color: "#555",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {message.message_text}
+          </div>
+        )}
 
         <Editor content={content} onChange={setContent} />
         <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>

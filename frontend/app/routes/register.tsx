@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from '@remix-run/react';
 import { useAuth } from '~/utils/auth';
+import { api } from '~/utils/api';
+import { getSessionId } from '~/utils/session';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -8,6 +10,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<any>(null);
   const { register, user } = useAuth();
   const navigate = useNavigate();
 
@@ -17,13 +20,45 @@ export default function Register() {
     }
   }, [user, navigate]);
 
+  // Fetch random message on mount
+  useEffect(() => {
+    api.getRandomMessage('register')
+      .then((msg) => {
+        setMessage(msg);
+
+        // Track message view
+        if (msg.id) {
+          api.trackMessageInteraction({
+            messageId: msg.id,
+            sessionId: getSessionId(),
+            context: 'register',
+            userState: 'new_visitor',
+          }).catch((err) => console.error('Error tracking message view:', err));
+        }
+      })
+      .catch((err) => console.error('Error fetching message:', err));
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      await register(email, password, name);
+      const response = await register(email, password, name);
+
+      // Track registration outcome
+      if (message?.id && response.user) {
+        await api.trackMessageInteraction({
+          messageId: message.id,
+          sessionId: getSessionId(),
+          userId: response.user.id,
+          context: 'register',
+          userState: 'new_visitor',
+          outcome: 'registered',
+        }).catch((err) => console.error('Error tracking outcome:', err));
+      }
+
       navigate('/entry');
     } catch (err: any) {
       setError(err.message || 'Registration failed');
@@ -40,6 +75,25 @@ export default function Register() {
     <div className="auth-container">
       <div className="auth-box">
         <h1>Journal - Register</h1>
+
+        {message && (
+          <div
+            style={{
+              background: "linear-gradient(135deg, #667eea15 0%, #764ba215 100%)",
+              border: "1px solid #667eea40",
+              borderRadius: "8px",
+              padding: "16px",
+              marginBottom: "20px",
+              fontSize: "14px",
+              lineHeight: "1.5",
+              color: "#555",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {message.message_text}
+          </div>
+        )}
+
         {error && <div className="error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">

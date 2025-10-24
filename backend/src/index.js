@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import { authPlugin } from './plugins/auth.js';
 import authRoutes from './routes/auth.js';
 import entriesRoutes from './routes/entries.js';
+import messagesRoutes from './routes/messages.js';
+import adminRoutes from './routes/admin.js';
 
 dotenv.config();
 
@@ -24,6 +26,8 @@ const init = async () => {
   // Register routes
   server.route(authRoutes);
   server.route(entriesRoutes);
+  server.route(messagesRoutes);
+  server.route(adminRoutes);
 
   // Health check route
   server.route({

@@ -106,6 +106,72 @@ export class ApiClient {
     return this.request(`/api/entries/day/${month}/${day}`);
   }
 
+  // Messages API
+  async getRandomMessage(context: 'login' | 'entry' | 'register'): Promise<any> {
+    return this.request(`/api/messages/random?context=${context}`);
+  }
+
+  async trackMessageInteraction(data: {
+    messageId: number;
+    sessionId: string;
+    userId?: number | null;
+    context: 'login' | 'register' | 'entry';
+    userState: 'new_visitor' | 'no_entries' | 'has_entries';
+    outcome?: 'registered' | 'wrote_first_entry' | 'wrote_entry' | 'left' | null;
+  }): Promise<any> {
+    return this.request('/api/messages/track', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getUserState(): Promise<{ userState: string; entryCount: number }> {
+    return this.request('/api/messages/user-state');
+  }
+
+  // Admin API
+  async getAdminMessages(): Promise<any[]> {
+    return this.request('/api/admin/messages');
+  }
+
+  async createMessage(data: {
+    messageText: string;
+    context: 'login' | 'entry' | 'both';
+    tone?: string;
+    length?: string;
+  }): Promise<any> {
+    return this.request('/api/admin/messages', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateMessage(
+    id: number,
+    data: {
+      messageText?: string;
+      context?: 'login' | 'entry' | 'both';
+      tone?: string;
+      length?: string;
+      isActive?: boolean;
+    }
+  ): Promise<any> {
+    return this.request(`/api/admin/messages/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteMessage(id: number): Promise<any> {
+    return this.request(`/api/admin/messages/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getMessageStats(id: number): Promise<any[]> {
+    return this.request(`/api/admin/messages/${id}/stats`);
+  }
+
   logout() {
     this.setToken(null);
   }
