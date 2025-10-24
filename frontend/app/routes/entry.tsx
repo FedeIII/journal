@@ -6,6 +6,7 @@ import Navbar from "~/components/Navbar";
 import { api } from "~/utils/api";
 import { useAuth } from "~/utils/auth";
 import { getSessionId } from "~/utils/session";
+import { getCachedMessage, setCachedMessage, clearCachedMessage } from "~/utils/messageCache";
 
 export default function Entry() {
   const { user, loading: authLoading } = useAuth();
@@ -45,25 +46,48 @@ export default function Entry() {
     }
   }, [user, todayString]);
 
-  // Fetch random message and track view
+  // Fetch or use cached message and track view
   useEffect(() => {
     if (user && userState) {
-      api.getRandomMessage('entry')
-        .then((msg) => {
-          setMessage(msg);
+      // Check cache first (using context + userState as key)
+      const cached = getCachedMessage('entry', userState);
 
-          // Track message view
-          if (msg.id) {
-            api.trackMessageInteraction({
-              messageId: msg.id,
-              sessionId: getSessionId(),
-              userId: user.id,
-              context: 'entry',
-              userState: userState,
-            }).catch((err) => console.error('Error tracking message view:', err));
-          }
-        })
-        .catch((err) => console.error('Error fetching message:', err));
+      if (cached) {
+        // Use cached message
+        setMessage(cached);
+
+        // Track view for cached message
+        if (cached.id) {
+          api.trackMessageInteraction({
+            messageId: cached.id,
+            sessionId: getSessionId(),
+            userId: user.id,
+            context: 'entry',
+            userState: userState,
+          }).catch((err) => console.error('Error tracking message view:', err));
+        }
+      } else {
+        // Fetch new random message and cache it
+        api.getRandomMessage('entry')
+          .then((msg) => {
+            setMessage(msg);
+
+            // Cache the message with userState
+            setCachedMessage(msg, 'entry', userState);
+
+            // Track message view
+            if (msg.id) {
+              api.trackMessageInteraction({
+                messageId: msg.id,
+                sessionId: getSessionId(),
+                userId: user.id,
+                context: 'entry',
+                userState: userState,
+              }).catch((err) => console.error('Error tracking message view:', err));
+            }
+          })
+          .catch((err) => console.error('Error fetching message:', err));
+      }
     }
   }, [user, userState]);
 
@@ -86,6 +110,9 @@ export default function Entry() {
           outcome: outcome,
         }).catch((err) => console.error('Error tracking outcome:', err));
       }
+
+      // Clear the cached message for this userState so they get a new one next time
+      clearCachedMessage('entry', userState);
 
       navigate("/");
     } catch (err) {

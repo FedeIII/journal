@@ -3,6 +3,7 @@ import { useNavigate, Link } from '@remix-run/react';
 import { useAuth } from '~/utils/auth';
 import { api } from '~/utils/api';
 import { getSessionId } from '~/utils/session';
+import { getCachedMessage, setCachedMessage, clearCachedMessage } from '~/utils/messageCache';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,23 +20,45 @@ export default function Login() {
     }
   }, [user, navigate]);
 
-  // Fetch random message on mount
+  // Fetch or use cached message on mount
   useEffect(() => {
-    api.getRandomMessage('login')
-      .then((msg) => {
-        setMessage(msg);
+    // Check cache first
+    const cached = getCachedMessage('login');
 
-        // Track message view
-        if (msg.id) {
-          api.trackMessageInteraction({
-            messageId: msg.id,
-            sessionId: getSessionId(),
-            context: 'login',
-            userState: 'new_visitor', // We don't know yet if they have entries
-          }).catch((err) => console.error('Error tracking message view:', err));
-        }
-      })
-      .catch((err) => console.error('Error fetching message:', err));
+    if (cached) {
+      // Use cached message
+      setMessage(cached);
+
+      // Track view for cached message
+      if (cached.id) {
+        api.trackMessageInteraction({
+          messageId: cached.id,
+          sessionId: getSessionId(),
+          context: 'login',
+          userState: 'new_visitor',
+        }).catch((err) => console.error('Error tracking message view:', err));
+      }
+    } else {
+      // Fetch new random message and cache it
+      api.getRandomMessage('login')
+        .then((msg) => {
+          setMessage(msg);
+
+          // Cache the message
+          setCachedMessage(msg, 'login');
+
+          // Track message view
+          if (msg.id) {
+            api.trackMessageInteraction({
+              messageId: msg.id,
+              sessionId: getSessionId(),
+              context: 'login',
+              userState: 'new_visitor',
+            }).catch((err) => console.error('Error tracking message view:', err));
+          }
+        })
+        .catch((err) => console.error('Error fetching message:', err));
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,6 +80,9 @@ export default function Login() {
           outcome: 'left', // They're continuing, not bouncing
         }).catch((err) => console.error('Error tracking outcome:', err));
       }
+
+      // Clear the cached login message so they get a new one next time
+      clearCachedMessage('login');
 
       navigate('/entry');
     } catch (err: any) {

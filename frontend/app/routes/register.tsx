@@ -3,6 +3,7 @@ import { useNavigate, Link } from '@remix-run/react';
 import { useAuth } from '~/utils/auth';
 import { api } from '~/utils/api';
 import { getSessionId } from '~/utils/session';
+import { getCachedMessage, setCachedMessage, clearCachedMessage } from '~/utils/messageCache';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -20,23 +21,45 @@ export default function Register() {
     }
   }, [user, navigate]);
 
-  // Fetch random message on mount
+  // Fetch or use cached message on mount
   useEffect(() => {
-    api.getRandomMessage('register')
-      .then((msg) => {
-        setMessage(msg);
+    // Check cache first
+    const cached = getCachedMessage('register');
 
-        // Track message view
-        if (msg.id) {
-          api.trackMessageInteraction({
-            messageId: msg.id,
-            sessionId: getSessionId(),
-            context: 'register',
-            userState: 'new_visitor',
-          }).catch((err) => console.error('Error tracking message view:', err));
-        }
-      })
-      .catch((err) => console.error('Error fetching message:', err));
+    if (cached) {
+      // Use cached message
+      setMessage(cached);
+
+      // Track view for cached message
+      if (cached.id) {
+        api.trackMessageInteraction({
+          messageId: cached.id,
+          sessionId: getSessionId(),
+          context: 'register',
+          userState: 'new_visitor',
+        }).catch((err) => console.error('Error tracking message view:', err));
+      }
+    } else {
+      // Fetch new random message and cache it
+      api.getRandomMessage('register')
+        .then((msg) => {
+          setMessage(msg);
+
+          // Cache the message
+          setCachedMessage(msg, 'register');
+
+          // Track message view
+          if (msg.id) {
+            api.trackMessageInteraction({
+              messageId: msg.id,
+              sessionId: getSessionId(),
+              context: 'register',
+              userState: 'new_visitor',
+            }).catch((err) => console.error('Error tracking message view:', err));
+          }
+        })
+        .catch((err) => console.error('Error fetching message:', err));
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +81,9 @@ export default function Register() {
           outcome: 'registered',
         }).catch((err) => console.error('Error tracking outcome:', err));
       }
+
+      // Clear the cached register message so they get a new one for entry page
+      clearCachedMessage('register');
 
       navigate('/entry');
     } catch (err: any) {
