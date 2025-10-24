@@ -13,6 +13,8 @@ import styles from "./styles/global.css?url";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: styles },
+  { rel: "icon", type: "image/png", sizes: "32x32", href: "https://azyr.io/thumbnails/favicon-32x32.png" },
+  { rel: "icon", type: "image/png", sizes: "16x16", href: "https://azyr.io/thumbnails/favicon-16x16.png" },
 ];
 
 export async function loader({ request }: LoaderFunctionArgs) {
