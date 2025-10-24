@@ -276,6 +276,97 @@ const adminRoutes = [
       }
     },
   },
+
+  // Get overall journal usage statistics
+  {
+    method: 'GET',
+    path: '/api/admin/stats',
+    options: {
+      auth: false, // Allow access without authentication for embedding in azyr.io
+    },
+    handler: async (request, h) => {
+      try {
+        // Global stats (excluding admin users)
+        const globalStats = await pool.query(`
+          SELECT
+            (SELECT COUNT(*) FROM users WHERE role != 'admin') as total_users,
+            (SELECT COUNT(*)
+             FROM users
+             WHERE role != 'admin'
+             AND id IN (
+               SELECT DISTINCT user_id
+               FROM journal_entries
+               GROUP BY user_id
+               HAVING COUNT(*) > 1
+             )) as returning_users,
+            (SELECT COUNT(*)
+             FROM journal_entries
+             WHERE user_id IN (
+               SELECT id FROM users WHERE role != 'admin'
+             )) as total_entries
+        `);
+
+        // fedelll@gmail.com user stats
+        const userStatsResult = await pool.query(`
+          SELECT
+            u.email,
+            COUNT(je.id) as entry_count,
+            MIN(je.entry_date) as first_entry_date,
+            MAX(je.entry_date) as last_entry_date,
+            (CURRENT_DATE - MIN(je.entry_date))::int + 1 as days_since_first_entry
+          FROM users u
+          LEFT JOIN journal_entries je ON u.id = je.user_id
+          WHERE u.email = 'fedelll@gmail.com'
+          GROUP BY u.id, u.email
+        `);
+
+        let userStats = null;
+        if (userStatsResult.rows.length > 0) {
+          const user = userStatsResult.rows[0];
+
+          // Calculate percentage of days with entries since first entry
+          const percentageAllTime = user.days_since_first_entry > 0
+            ? ((user.entry_count / user.days_since_first_entry) * 100).toFixed(1)
+            : 0;
+
+          // Calculate percentage for last 30 days
+          const last30DaysResult = await pool.query(`
+            SELECT COUNT(*) as entries_last_30_days
+            FROM journal_entries je
+            JOIN users u ON je.user_id = u.id
+            WHERE u.email = 'fedelll@gmail.com'
+            AND je.entry_date >= CURRENT_DATE - INTERVAL '30 days'
+          `);
+
+          const entriesLast30Days = parseInt(last30DaysResult.rows[0].entries_last_30_days);
+          const percentageLast30Days = ((entriesLast30Days / 30) * 100).toFixed(1);
+
+          userStats = {
+            email: user.email,
+            entryCount: parseInt(user.entry_count),
+            firstEntryDate: user.first_entry_date,
+            lastEntryDate: user.last_entry_date,
+            daysSinceFirstEntry: user.days_since_first_entry,
+            percentageAllTime: parseFloat(percentageAllTime),
+            entriesLast30Days: entriesLast30Days,
+            percentageLast30Days: parseFloat(percentageLast30Days),
+          };
+        }
+
+        return {
+          global: {
+            totalUsers: parseInt(globalStats.rows[0].total_users),
+            returningUsers: parseInt(globalStats.rows[0].returning_users),
+            totalEntries: parseInt(globalStats.rows[0].total_entries),
+          },
+          user: userStats,
+        };
+      } catch (err) {
+        console.error('Error fetching journal stats:', err);
+        throw Boom.internal('Failed to fetch stats');
+      }
+    },
+  },
 ];
 
 export default adminRoutes;
