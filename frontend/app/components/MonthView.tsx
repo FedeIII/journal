@@ -17,9 +17,11 @@ import {
 interface MonthViewProps {
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
+  viewMode: 'month' | 'week';
+  setViewMode: (mode: 'month' | 'week') => void;
 }
 
-export default function MonthView({ currentDate, setCurrentDate }: MonthViewProps) {
+export default function MonthView({ currentDate, setCurrentDate, viewMode, setViewMode }: MonthViewProps) {
   const navigate = useNavigate();
   const [entries, setEntries] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -73,17 +75,71 @@ export default function MonthView({ currentDate, setCurrentDate }: MonthViewProp
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <button onClick={handlePrevMonth} className="btn btn-secondary" style={{ width: 'auto', padding: '8px 16px' }}>
-          &larr; Previous
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 'var(--space-4)',
+        paddingBottom: 'var(--space-3)',
+        borderBottom: `1px solid var(--border-light)`
+      }}>
+        <button
+          onClick={handlePrevMonth}
+          className="btn btn-secondary"
+          style={{
+            width: 'auto',
+            padding: 'var(--space-2) var(--space-3)'
+          }}
+        >
+          ← Prev
         </button>
-        <h2 style={{ fontSize: '28px', margin: 0 }}>{format(currentDate, 'MMMM yyyy')}</h2>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={handleToday} className="btn btn-secondary" style={{ width: 'auto', padding: '8px 16px' }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <div className="view-toggle-group">
+            <button
+              onClick={() => setViewMode('month')}
+              className={`view-toggle-btn ${viewMode === 'month' ? 'active' : ''}`}
+            >
+              Month
+            </button>
+            <button
+              onClick={() => setViewMode('week')}
+              className={`view-toggle-btn ${viewMode === 'week' ? 'active' : ''}`}
+            >
+              Week
+            </button>
+          </div>
+
+          <h2 style={{
+            fontSize: 'var(--font-size-2xl)',
+            margin: 0,
+            color: 'var(--text-primary)',
+            fontWeight: 400
+          }}>
+            {format(currentDate, 'MMMM yyyy')}
+          </h2>
+        </div>
+
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <button
+            onClick={handleToday}
+            className="btn btn-secondary"
+            style={{
+              width: 'auto',
+              padding: 'var(--space-2) var(--space-3)'
+            }}
+          >
             Today
           </button>
-          <button onClick={handleNextMonth} className="btn btn-secondary" style={{ width: 'auto', padding: '8px 16px' }}>
-            Next &rarr;
+          <button
+            onClick={handleNextMonth}
+            className="btn btn-secondary"
+            style={{
+              width: 'auto',
+              padding: 'var(--space-2) var(--space-3)'
+            }}
+          >
+            Next →
           </button>
         </div>
       </div>
@@ -113,14 +169,9 @@ export default function MonthView({ currentDate, setCurrentDate }: MonthViewProp
                   cursor: 'pointer',
                 }}
               >
-                <div style={{ fontWeight: isTodayDate ? 'bold' : 'normal' }}>
+                <div style={{ fontWeight: isTodayDate ? 'bold' : 'normal', fontSize: 'var(--font-size-lg)' }}>
                   {format(day, 'd')}
                 </div>
-                {hasEntry && (
-                  <div style={{ fontSize: '10px', color: '#667eea', marginTop: '4px' }}>
-                    ●
-                  </div>
-                )}
               </div>
             );
           })}

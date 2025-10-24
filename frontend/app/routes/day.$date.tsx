@@ -62,7 +62,7 @@ export default function DayView() {
     const renderNode = (node: any, index: number): any => {
       if (node.type === "paragraph") {
         return (
-          <p key={index} style={{ marginBottom: "12px" }}>
+          <p key={index} style={{ marginBottom: "var(--space-3)" }}>
             {node.content?.map((child: any, i: number) => renderNode(child, i))}
           </p>
         );
@@ -84,7 +84,7 @@ export default function DayView() {
 
       if (node.type === "bulletList") {
         return (
-          <ul key={index} style={{ marginBottom: "12px", marginLeft: "20px" }}>
+          <ul key={index} style={{ marginBottom: "var(--space-3)", marginLeft: "var(--space-4)" }}>
             {node.content?.map((child: any, i: number) => renderNode(child, i))}
           </ul>
         );
@@ -92,7 +92,7 @@ export default function DayView() {
 
       if (node.type === "orderedList") {
         return (
-          <ol key={index} style={{ marginBottom: "12px", marginLeft: "20px" }}>
+          <ol key={index} style={{ marginBottom: "var(--space-3)", marginLeft: "var(--space-4)" }}>
             {node.content?.map((child: any, i: number) => renderNode(child, i))}
           </ol>
         );
@@ -111,7 +111,7 @@ export default function DayView() {
           node.attrs?.level || 1
         }` as keyof JSX.IntrinsicElements;
         return (
-          <HeadingTag key={index} style={{ marginBottom: "12px" }}>
+          <HeadingTag key={index} style={{ marginBottom: "var(--space-3)" }}>
             {node.content?.map((child: any, i: number) => renderNode(child, i))}
           </HeadingTag>
         );
@@ -159,21 +159,35 @@ export default function DayView() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: "32px",
+            marginBottom: "var(--space-5)",
+            paddingBottom: "var(--space-3)",
+            borderBottom: `2px solid var(--border-light)`
           }}
         >
-          <h1 style={{ fontSize: "32px", margin: 0 }}>{displayDate}</h1>
+          <h1 style={{
+            fontSize: "var(--font-size-3xl)",
+            margin: 0,
+            color: "var(--text-primary)",
+            fontWeight: 400
+          }}>
+            {displayDate}
+          </h1>
           <button
             className="btn btn-secondary"
             onClick={() => navigate("/calendar")}
-            style={{ width: "auto", padding: "8px 16px" }}
+            style={{ width: "auto", padding: "var(--space-2) var(--space-4)" }}
           >
-            Back to Calendar
+            ← Back
           </button>
         </div>
 
         {entries.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>
+          <div style={{
+            textAlign: "center",
+            padding: "var(--space-8)",
+            color: "var(--text-muted)",
+            fontStyle: "italic"
+          }}>
             No entries for this day yet.
           </div>
         ) : (
@@ -187,14 +201,18 @@ export default function DayView() {
                 <div className="year-title">{year}</div>
                 <div
                   style={{
-                    fontSize: "14px",
-                    color: "#999",
-                    marginBottom: "12px",
+                    fontSize: "var(--font-size-sm)",
+                    color: "var(--text-muted)",
+                    marginBottom: "var(--space-3)",
+                    fontStyle: "italic"
                   }}
                 >
                   {fullDate}
                 </div>
-                <div style={{ lineHeight: "1.6", color: "#333" }}>
+                <div style={{
+                  lineHeight: "var(--line-height-relaxed)",
+                  color: "var(--text-secondary)"
+                }}>
                   {renderContent(entry.content)}
                 </div>
               </div>

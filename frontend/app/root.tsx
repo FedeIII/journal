@@ -9,6 +9,7 @@ import {
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { AuthProvider } from "~/utils/auth";
+import { ThemeProvider } from "~/utils/theme";
 import styles from "./styles/global.css?url";
 
 export const links: LinksFunction = () => [
@@ -37,9 +38,11 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AuthProvider>
-          <Outlet />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Outlet />
+          </AuthProvider>
+        </ThemeProvider>
         <ScrollRestoration />
         <Scripts />
         <script

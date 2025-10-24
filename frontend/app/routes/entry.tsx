@@ -138,34 +138,63 @@ export default function Entry() {
         {message && (
           <div
             style={{
-              background: "linear-gradient(135deg, #667eea15 0%, #764ba215 100%)",
-              border: "1px solid #667eea40",
-              borderRadius: "8px",
-              padding: "20px 24px",
-              marginBottom: "24px",
-              lineHeight: "1.6",
-              color: "#555",
+              background: "var(--bg-secondary)",
+              border: `2px solid var(--accent-primary)`,
+              borderRadius: "var(--radius-md)",
+              padding: "var(--space-4)",
+              marginBottom: "var(--space-4)",
+              lineHeight: "var(--line-height-relaxed)",
+              color: "var(--text-secondary)",
               whiteSpace: "pre-wrap",
+              fontStyle: "italic",
+              position: "relative",
+              boxShadow: "var(--shadow-sm)",
             }}
           >
+            <div style={{
+              position: "absolute",
+              top: 0,
+              left: "var(--space-3)",
+              transform: "translateY(-50%)",
+              background: "var(--bg-elevated)",
+              padding: "0 var(--space-2)",
+              color: "var(--accent-tertiary)",
+              fontSize: "var(--font-size-sm)",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+            }}>
+              ⊹ Inspiration ⊹
+            </div>
             {message.message_text}
           </div>
         )}
 
         <Editor content={content} onChange={setContent} />
-        <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
+        <div style={{
+          marginTop: "var(--space-4)",
+          display: "flex",
+          gap: "var(--space-3)",
+          justifyContent: "center"
+        }}>
           <button
             className="btn"
             onClick={handleSave}
             disabled={saving}
-            style={{ width: "auto", padding: "12px 24px" }}
+            style={{
+              width: "auto",
+              padding: "var(--space-2) var(--space-5)"
+            }}
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? "Saving..." : "Save Entry"}
           </button>
           <button
             className="btn btn-secondary"
             onClick={() => navigate("/calendar")}
-            style={{ width: "auto", padding: "12px 24px" }}
+            style={{
+              width: "auto",
+              padding: "var(--space-2) var(--space-4)"
+            }}
           >
             View Calendar
           </button>

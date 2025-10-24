@@ -30,36 +30,20 @@ export default function Calendar() {
     <div>
       <Navbar />
       <div className="calendar">
-        <div className="calendar-header">
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              className={viewMode === 'month' ? 'btn' : 'btn btn-secondary'}
-              onClick={() => setViewMode('month')}
-              style={{ width: 'auto', padding: '8px 16px' }}
-            >
-              Month View
-            </button>
-            <button
-              className={viewMode === 'week' ? 'btn' : 'btn btn-secondary'}
-              onClick={() => setViewMode('week')}
-              style={{ width: 'auto', padding: '8px 16px' }}
-            >
-              Week View
-            </button>
-          </div>
-          <button
-            className="btn"
-            onClick={() => navigate('/entry')}
-            style={{ width: 'auto', padding: '8px 16px' }}
-          >
-            New Entry
-          </button>
-        </div>
-
         {viewMode === 'month' ? (
-          <MonthView currentDate={currentDate} setCurrentDate={setCurrentDate} />
+          <MonthView
+            currentDate={currentDate}
+            setCurrentDate={setCurrentDate}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+          />
         ) : (
-          <WeekView currentDate={currentDate} setCurrentDate={setCurrentDate} />
+          <WeekView
+            currentDate={currentDate}
+            setCurrentDate={setCurrentDate}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+          />
         )}
       </div>
     </div>

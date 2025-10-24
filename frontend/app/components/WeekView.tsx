@@ -14,11 +14,15 @@ import { api } from "~/utils/api";
 interface WeekViewProps {
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
+  viewMode: 'month' | 'week';
+  setViewMode: (mode: 'month' | 'week') => void;
 }
 
 export default function WeekView({
   currentDate,
   setCurrentDate,
+  viewMode,
+  setViewMode,
 }: WeekViewProps) {
   const navigate = useNavigate();
   const [entries, setEntries] = useState<Map<string, any>>(new Map());
@@ -91,31 +95,72 @@ export default function WeekView({
 
   return (
     <div>
-      <div style={{ marginBottom: "24px", textAlign: "center" }}>
-        <h2 style={{ fontSize: "28px", margin: 0 }}>--- {currentMonth} ---</h2>
+      <div style={{
+        marginBottom: "var(--space-4)",
+        textAlign: "center",
+        paddingBottom: "var(--space-3)",
+        borderBottom: `1px solid var(--border-light)`,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: "var(--space-3)"
+      }}>
+        <div className="view-toggle-group">
+          <button
+            onClick={() => setViewMode('month')}
+            className={`view-toggle-btn ${viewMode === 'month' ? 'active' : ''}`}
+          >
+            Month
+          </button>
+          <button
+            onClick={() => setViewMode('week')}
+            className={`view-toggle-btn ${viewMode === 'week' ? 'active' : ''}`}
+          >
+            Week
+          </button>
+        </div>
+
+        <h2 style={{
+          fontSize: "var(--font-size-2xl)",
+          margin: 0,
+          color: "var(--text-primary)",
+          fontWeight: 400
+        }}>
+          {currentMonth}
+        </h2>
       </div>
 
       {loading ? (
         <div className="loading">Loading entries...</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table style={{
+            width: "100%",
+            borderCollapse: "separate",
+            borderSpacing: "4px",
+            border: "none",
+            background: "var(--bg-primary)",
+            padding: "4px",
+            borderRadius: "var(--radius-md)"
+          }}>
             <thead>
               <tr>
-                <th
-                  style={{
-                    padding: "12px",
-                    textAlign: "center",
-                    borderBottom: "2px solid #ddd",
-                  }}
-                >
+                <th style={{
+                  padding: "var(--space-2)",
+                  textAlign: "center",
+                  background: "var(--bg-secondary)",
+                  borderRadius: "var(--radius-sm)"
+                }}>
                   <button
                     onClick={handleYearUp}
                     className="btn btn-secondary"
                     style={{
                       width: "auto",
-                      padding: "4px 12px",
-                      fontSize: "14px",
+                      height: "32px",
+                      padding: "0 var(--space-2)",
+                      fontSize: "var(--font-size-base)",
+                      border: "none",
+                      background: "transparent"
                     }}
                   >
                     ↑
@@ -127,42 +172,41 @@ export default function WeekView({
                     <th
                       key={format(day, "yyyy-MM-dd")}
                       style={{
-                        padding: "12px",
+                        padding: "var(--space-2)",
                         textAlign: "center",
-                        borderBottom: "2px solid #ddd",
-                        minWidth: "120px",
-                        backgroundColor: isTodayColumn
-                          ? "#e8eaf6"
-                          : "transparent",
+                        minWidth: "140px",
+                        background: isTodayColumn
+                          ? "var(--bg-secondary)"
+                          : "var(--bg-elevated)",
+                        fontWeight: isTodayColumn ? 600 : 500,
+                        fontSize: "var(--font-size-sm)",
+                        textTransform: "none",
+                        letterSpacing: "0",
+                        color: "var(--text-primary)",
+                        borderRadius: "var(--radius-sm)"
                       }}
                     >
-                      <div
-                        style={{
-                          fontWeight: isTodayColumn ? "bold" : "normal",
-                        }}
-                      >
-                        {format(day, "EEE d")}
-                      </div>
+                      {format(day, "EEE d")}
                     </th>
                   );
                 })}
               </tr>
             </thead>
             <tbody>
-              {years.map((year) => (
+              {years.map((year, index) => (
                 <tr key={year}>
-                  <td
-                    style={{
-                      padding: "12px",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      borderRight: "2px solid #ddd",
-                      backgroundColor: "#f9f9f9",
-                    }}
-                  >
+                  <td style={{
+                    padding: "var(--space-2)",
+                    fontWeight: 600,
+                    textAlign: "center",
+                    background: "var(--bg-secondary)",
+                    color: "var(--text-primary)",
+                    fontSize: "var(--font-size-base)",
+                    borderRadius: "var(--radius-sm)"
+                  }}>
                     {year}
                   </td>
-                  {weekDays.map((day) => {
+                  {weekDays.map((day, dayIndex) => {
                     const monthDay = format(day, "MM-dd");
                     const dateString = `${year}-${monthDay}`;
                     const entry = entries.get(dateString);
@@ -174,39 +218,28 @@ export default function WeekView({
                       <td
                         key={dateString}
                         onClick={() => handleDayClick(monthDay)}
-                        style={{
-                          padding: "12px",
-                          border: isTodayCell
-                            ? "2px solid #667eea"
-                            : "1px solid #ddd",
-                          cursor: "pointer",
-                          backgroundColor: hasEntry ? "#e8eaf6" : "white",
-                          verticalAlign: "top",
-                          height: "80px",
-                          transition: "background-color 0.2s",
-                          fontWeight: isTodayCell ? "bold" : "normal",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = hasEntry
-                            ? "#d1d4f0"
-                            : "#f0f0f0";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = hasEntry
-                            ? "#e8eaf6"
-                            : "white";
-                        }}
+                        className={`week-cell ${hasEntry ? 'has-entry' : ''} ${isTodayCell ? 'today' : ''}`}
                       >
                         {hasEntry && (
-                          <div
-                            style={{
-                              fontSize: "12px",
-                              color: "#555",
-                              lineHeight: "1.4",
-                            }}
-                          >
-                            {getEntryPreview(entry.content)}
-                          </div>
+                          <>
+                            <div style={{
+                              position: "absolute",
+                              top: "var(--space-1)",
+                              right: "var(--space-1)",
+                              width: "6px",
+                              height: "6px",
+                              background: "var(--accent-primary)",
+                              borderRadius: "50%"
+                            }} />
+                            <div style={{
+                              fontSize: "var(--font-size-xs)",
+                              color: "var(--text-secondary)",
+                              lineHeight: "var(--line-height-normal)",
+                              fontStyle: "italic"
+                            }}>
+                              {getEntryPreview(entry.content)}
+                            </div>
+                          </>
                         )}
                       </td>
                     );
@@ -216,20 +249,28 @@ export default function WeekView({
             </tbody>
             <tfoot>
               <tr>
-                <td style={{ padding: "12px", textAlign: "center" }}>
+                <td style={{
+                  padding: "var(--space-2)",
+                  textAlign: "center",
+                  background: "var(--bg-secondary)",
+                  borderRadius: "var(--radius-sm)"
+                }}>
                   <button
                     onClick={handleYearDown}
                     className="btn btn-secondary"
                     style={{
                       width: "auto",
-                      padding: "4px 12px",
-                      fontSize: "14px",
+                      height: "32px",
+                      padding: "0 var(--space-2)",
+                      fontSize: "var(--font-size-base)",
+                      border: "none",
+                      background: "transparent"
                     }}
                   >
                     ↓
                   </button>
                 </td>
-                <td colSpan={7}></td>
+                <td colSpan={7} />
               </tr>
             </tfoot>
           </table>

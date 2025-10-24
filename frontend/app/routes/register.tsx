@@ -100,22 +100,50 @@ export default function Register() {
   return (
     <div className="auth-container">
       <div className="auth-box">
-        <h1>Journal - Register</h1>
+        <h1>Journal</h1>
+        <p style={{
+          textAlign: "center",
+          color: "var(--text-muted)",
+          fontSize: "var(--font-size-sm)",
+          marginTop: "calc(var(--space-3) * -1)",
+          marginBottom: "var(--space-4)",
+          fontStyle: "italic"
+        }}>
+          Begin your journey
+        </p>
 
         {message && (
           <div
             style={{
-              background: "linear-gradient(135deg, #667eea15 0%, #764ba215 100%)",
-              border: "1px solid #667eea40",
-              borderRadius: "8px",
-              padding: "16px",
-              marginBottom: "20px",
-              fontSize: "14px",
-              lineHeight: "1.5",
-              color: "#555",
+              background: "var(--bg-secondary)",
+              border: `2px solid var(--accent-primary)`,
+              borderRadius: "var(--radius-md)",
+              padding: "var(--space-3)",
+              marginBottom: "var(--space-4)",
+              fontSize: "var(--font-size-sm)",
+              lineHeight: "var(--line-height-relaxed)",
+              color: "var(--text-secondary)",
               whiteSpace: "pre-wrap",
+              fontStyle: "italic",
+              position: "relative",
+              boxShadow: "var(--shadow-sm)",
             }}
           >
+            <div style={{
+              position: "absolute",
+              top: 0,
+              left: "var(--space-3)",
+              transform: "translateY(-50%)",
+              background: "var(--bg-elevated)",
+              padding: "0 var(--space-2)",
+              color: "var(--accent-tertiary)",
+              fontSize: "var(--font-size-xs)",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+            }}>
+              ⊹ Welcome ⊹
+            </div>
             {message.message_text}
           </div>
         )}
