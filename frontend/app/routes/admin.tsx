@@ -22,7 +22,7 @@ export default function Admin() {
   });
 
   // Sorting and filtering state
-  const [sortBy, setSortBy] = useState<"views" | "id" | "registrations" | "first_entry" | "more_entries">("views");
+  const [sortBy, setSortBy] = useState<"views" | "id" | "registrations" | "first_entry" | "more_entries" | "conversion_rate">("conversion_rate");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [filterTag, setFilterTag] = useState<string>("");
 
@@ -158,6 +158,14 @@ export default function Admin() {
           const aMoreNet = (a.existing_user_wrote || 0) - (a.existing_user_left || 0);
           const bMoreNet = (b.existing_user_wrote || 0) - (b.existing_user_left || 0);
           comparison = aMoreNet - bMoreNet;
+          break;
+        case "conversion_rate":
+          // Calculate conversion rate: (total positive outcomes / total views) * 100
+          const aTotalConversions = (a.new_user_registered || 0) + (a.first_entry_written || 0) + (a.existing_user_wrote || 0);
+          const bTotalConversions = (b.new_user_registered || 0) + (b.first_entry_written || 0) + (b.existing_user_wrote || 0);
+          const aRate = a.total_views > 0 ? (aTotalConversions / a.total_views) * 100 : 0;
+          const bRate = b.total_views > 0 ? (bTotalConversions / b.total_views) * 100 : 0;
+          comparison = aRate - bRate;
           break;
       }
 
@@ -539,6 +547,23 @@ export default function Admin() {
                   </th>
                   <th
                     rowSpan={2}
+                    onClick={() => toggleSort("conversion_rate")}
+                    style={{
+                      padding: "8px",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      color: "#333",
+                      width: "100px",
+                      borderBottom: "2px solid #ddd",
+                      cursor: "pointer",
+                      userSelect: "none",
+                      background: sortBy === "conversion_rate" ? "#f0f0f0" : "transparent",
+                    }}
+                  >
+                    Conv. Rate {sortBy === "conversion_rate" && (sortOrder === "asc" ? "↑" : "↓")}
+                  </th>
+                  <th
+                    rowSpan={2}
                     style={{
                       padding: "8px",
                       textAlign: "center",
@@ -549,6 +574,83 @@ export default function Admin() {
                     }}
                   >
                     Actions
+                  </th>
+                </tr>
+                <tr style={{ borderBottom: "2px solid #ddd" }}>
+                  {/* Subheaders for Registrations */}
+                  <th
+                    style={{
+                      padding: "6px",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      fontSize: "12px",
+                      color: "#4caf50",
+                      background: "#e8f5e9",
+                    }}
+                  >
+                    +
+                  </th>
+                  <th
+                    style={{
+                      padding: "6px",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      fontSize: "12px",
+                      color: "#f44336",
+                      background: "#ffebee",
+                    }}
+                  >
+                    -
+                  </th>
+                  {/* Subheaders for First Entry */}
+                  <th
+                    style={{
+                      padding: "6px",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      fontSize: "12px",
+                      color: "#4caf50",
+                      background: "#e8f5e9",
+                    }}
+                  >
+                    +
+                  </th>
+                  <th
+                    style={{
+                      padding: "6px",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      fontSize: "12px",
+                      color: "#f44336",
+                      background: "#ffebee",
+                    }}
+                  >
+                    -
+                  </th>
+                  {/* Subheaders for More Entries */}
+                  <th
+                    style={{
+                      padding: "6px",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      fontSize: "12px",
+                      color: "#4caf50",
+                      background: "#e8f5e9",
+                    }}
+                  >
+                    +
+                  </th>
+                  <th
+                    style={{
+                      padding: "6px",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      fontSize: "12px",
+                      color: "#f44336",
+                      background: "#ffebee",
+                    }}
+                  >
+                    -
                   </th>
                 </tr>
               </thead>
@@ -563,7 +665,7 @@ export default function Admin() {
                     }}
                   >
                     {editingId === message.id ? (
-                      <td colSpan={11} style={{ padding: "16px" }}>
+                      <td colSpan={12} style={{ padding: "16px" }}>
                         <div>
                           <textarea
                             value={formData.messageText}
@@ -906,6 +1008,34 @@ export default function Admin() {
                           >
                             {message.existing_user_left || 0}
                           </div>
+                        </td>
+
+                        {/* Conversion Rate */}
+                        <td
+                          title="Total positive outcomes / Total views"
+                          style={{
+                            padding: "8px",
+                            textAlign: "center",
+                            verticalAlign: "middle",
+                            cursor: "help",
+                          }}
+                        >
+                          {(() => {
+                            const totalConversions = (message.new_user_registered || 0) + (message.first_entry_written || 0) + (message.existing_user_wrote || 0);
+                            const rate = message.total_views > 0 ? (totalConversions / message.total_views) * 100 : 0;
+                            const rateColor = rate >= 50 ? "#4caf50" : rate >= 25 ? "#ff9800" : "#f44336";
+                            return (
+                              <div
+                                style={{
+                                  fontSize: "18px",
+                                  fontWeight: "bold",
+                                  color: rateColor,
+                                }}
+                              >
+                                {rate.toFixed(1)}%
+                              </div>
+                            );
+                          })()}
                         </td>
 
                         {/* Actions */}
