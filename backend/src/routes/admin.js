@@ -313,7 +313,9 @@ const adminRoutes = [
             COUNT(je.id) as entry_count,
             MIN(je.entry_date) as first_entry_date,
             MAX(je.entry_date) as last_entry_date,
-            (CURRENT_DATE - MIN(je.entry_date))::int + 1 as days_since_first_entry
+            (CURRENT_DATE - MIN(je.entry_date))::int + 1 as days_since_first_entry,
+            EXTRACT(YEAR FROM MIN(je.entry_date))::int as first_entry_year,
+            EXTRACT(YEAR FROM CURRENT_DATE)::int as current_year
           FROM users u
           LEFT JOIN journal_entries je ON u.id = je.user_id
           WHERE u.email = 'fedelll@gmail.com'
@@ -341,6 +343,40 @@ const adminRoutes = [
           const entriesLast30Days = parseInt(last30DaysResult.rows[0].entries_last_30_days);
           const percentageLast30Days = ((entriesLast30Days / 30) * 100).toFixed(1);
 
+          // Calculate percentage for current year
+          const currentYearResult = await pool.query(`
+            SELECT
+              COUNT(*) as entries_current_year,
+              MIN(je.entry_date) as first_entry_this_year
+            FROM journal_entries je
+            JOIN users u ON je.user_id = u.id
+            WHERE u.email = 'fedelll@gmail.com'
+            AND EXTRACT(YEAR FROM je.entry_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+          `);
+
+          const entriesCurrentYear = parseInt(currentYearResult.rows[0].entries_current_year);
+
+          // Determine start date for current year calculation
+          let currentYearStartDate;
+          const isFirstYear = user.first_entry_year === user.current_year;
+
+          if (isFirstYear) {
+            // If current year is the first year with entries, count from first entry date
+            currentYearStartDate = user.first_entry_date;
+          } else {
+            // Otherwise, count from Jan 1st of current year
+            currentYearStartDate = `${user.current_year}-01-01`;
+          }
+
+          const daysInCurrentYearPeriod = await pool.query(`
+            SELECT (CURRENT_DATE - $1::date)::int + 1 as days
+          `, [currentYearStartDate]);
+
+          const daysToCount = parseInt(daysInCurrentYearPeriod.rows[0].days);
+          const percentageCurrentYear = daysToCount > 0
+            ? ((entriesCurrentYear / daysToCount) * 100).toFixed(1)
+            : 0;
+
           userStats = {
             email: user.email,
             entryCount: parseInt(user.entry_count),
@@ -350,6 +386,9 @@ const adminRoutes = [
             percentageAllTime: parseFloat(percentageAllTime),
             entriesLast30Days: entriesLast30Days,
             percentageLast30Days: parseFloat(percentageLast30Days),
+            entriesCurrentYear: entriesCurrentYear,
+            percentageCurrentYear: parseFloat(percentageCurrentYear),
+            currentYearStartDate: currentYearStartDate,
           };
         }
 
