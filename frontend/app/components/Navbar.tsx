@@ -1,6 +1,7 @@
 import { useAuth } from "~/utils/auth";
 import { useNavigate, Link } from "@remix-run/react";
 import ThemeToggle from "./ThemeToggle";
+import ProgressStats from "./ProgressStats";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -25,6 +26,7 @@ export default function Navbar() {
         <Link to="/calendar" className="nav-link">
           Calendar
         </Link>
+        <ProgressStats compact={true} />
         <span
           style={{
             color: "var(--text-muted)",

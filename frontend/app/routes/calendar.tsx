@@ -5,6 +5,7 @@ import { api } from '~/utils/api';
 import Navbar from '~/components/Navbar';
 import MonthView from '~/components/MonthView';
 import WeekView from '~/components/WeekView';
+import ProgressStats from '~/components/ProgressStats';
 
 export type ViewMode = 'month' | 'week';
 
@@ -30,6 +31,7 @@ export default function Calendar() {
     <div>
       <Navbar />
       <div className="calendar">
+        <ProgressStats />
         {viewMode === 'month' ? (
           <MonthView
             currentDate={currentDate}

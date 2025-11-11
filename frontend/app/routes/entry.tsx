@@ -15,6 +15,7 @@ export default function Entry() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<any>(null);
+  const [progressMessage, setProgressMessage] = useState<string | null>(null);
   const [userState, setUserState] = useState<'no_entries' | 'has_entries'>('no_entries');
   const today = new Date();
   const todayString = format(today, "yyyy-MM-dd");
@@ -90,6 +91,17 @@ export default function Entry() {
       }
     }
   }, [user, userState]);
+
+  // Fetch progress-based motivational message
+  useEffect(() => {
+    if (user) {
+      api.getMotivationalMessage('entry_page')
+        .then((data) => {
+          setProgressMessage(data.message);
+        })
+        .catch((err) => console.error('Error fetching progress message:', err));
+    }
+  }, [user]);
 
   const handleSave = async () => {
     if (!content) return;
@@ -167,6 +179,40 @@ export default function Entry() {
               ⊹ Inspiration ⊹
             </div>
             {message.message_text}
+          </div>
+        )}
+
+        {progressMessage && (
+          <div
+            style={{
+              background: "var(--bg-elevated)",
+              border: `1px solid var(--accent-secondary)`,
+              borderRadius: "var(--radius-md)",
+              padding: "var(--space-3)",
+              marginBottom: "var(--space-4)",
+              lineHeight: "var(--line-height-relaxed)",
+              color: "var(--text-primary)",
+              fontSize: "var(--font-size-sm)",
+              position: "relative",
+              boxShadow: "var(--shadow-sm)",
+            }}
+          >
+            <div style={{
+              position: "absolute",
+              top: 0,
+              left: "var(--space-3)",
+              transform: "translateY(-50%)",
+              background: "var(--bg-primary)",
+              padding: "0 var(--space-2)",
+              color: "var(--accent-secondary)",
+              fontSize: "var(--font-size-xs)",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+            }}>
+              ⭐ Your Progress ⭐
+            </div>
+            {progressMessage}
           </div>
         )}
 

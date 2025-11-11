@@ -172,6 +172,15 @@ export class ApiClient {
     return this.request(`/api/admin/messages/${id}/stats`);
   }
 
+  // Progress API
+  async getProgressStats(): Promise<any> {
+    return this.request('/api/progress/stats');
+  }
+
+  async getMotivationalMessage(context: string = 'entry_page'): Promise<any> {
+    return this.request(`/api/progress/message?context=${context}`);
+  }
+
   logout() {
     this.setToken(null);
   }

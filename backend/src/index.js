@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.js';
 import entriesRoutes from './routes/entries.js';
 import messagesRoutes from './routes/messages.js';
 import adminRoutes from './routes/admin.js';
+import progressRoutes from './routes/progress.js';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ const init = async () => {
   server.route(entriesRoutes);
   server.route(messagesRoutes);
   server.route(adminRoutes);
+  server.route(progressRoutes);
 
   // Health check route
   server.route({

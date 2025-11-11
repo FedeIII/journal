@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom';
 import Joi from 'joi';
 import pool from '../config/database.js';
+import * as progressService from '../services/progressService.js';
 
 const entriesRoutes = [
   // Create or update entry for a specific date
@@ -27,6 +28,15 @@ const entriesRoutes = [
            DO UPDATE SET content = $3, updated_at = CURRENT_TIMESTAMP
            RETURNING id, user_id, entry_date, content, created_at, updated_at`,
           [userId, date, JSON.stringify(content)]
+        );
+
+        // Update user streak and completion samples in background
+        // Don't wait for it to complete to keep response fast
+        progressService.updateUserStreak(userId).catch(err =>
+          console.error('Error updating streak:', err)
+        );
+        progressService.updateCompletionSamples(userId).catch(err =>
+          console.error('Error updating completion samples:', err)
         );
 
         return result.rows[0];
