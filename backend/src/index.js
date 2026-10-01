@@ -12,7 +12,8 @@ dotenv.config();
 const init = async () => {
   const server = Hapi.server({
     port: process.env.PORT || 3001,
-    host: '0.0.0.0',
+    // Loopback only: nginx is the sole client. 0.0.0.0 put the API on every interface.
+    host: process.env.HOST || '127.0.0.1',
     routes: {
       cors: {
         origin: [process.env.FRONTEND_URL || 'http://localhost:3000'],

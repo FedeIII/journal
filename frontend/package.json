@@ -8,7 +8,7 @@
   "scripts": {
     "build": "remix vite:build",
     "dev": "remix vite:dev",
-    "start": "remix-serve ./build/server/index.js",
+    "start": "HOST=${HOST:-127.0.0.1} remix-serve ./build/server/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {

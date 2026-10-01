@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: journal_user
       POSTGRES_PASSWORD: journal_password
     ports:
-      - "5433:5432"  # Use port 5433 on host to avoid conflict
+      - "127.0.0.1:5433:5432"  # Port 5433 avoids a conflict; loopback only, because Docker bypasses ufw
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d
