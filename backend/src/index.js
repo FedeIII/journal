@@ -6,7 +6,6 @@ import entriesRoutes from './routes/entries.js';
 import messagesRoutes from './routes/messages.js';
 import adminRoutes from './routes/admin.js';
 import progressRoutes from './routes/progress.js';
-import activityRoutes from './routes/activity.js';
 
 dotenv.config();
 
@@ -32,7 +31,6 @@ const init = async () => {
   server.route(messagesRoutes);
   server.route(adminRoutes);
   server.route(progressRoutes);
-  server.route(activityRoutes);
 
   // Health check route
   server.route({
